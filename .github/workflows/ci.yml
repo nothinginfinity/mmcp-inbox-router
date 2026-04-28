@@ -5,9 +5,24 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      space:
+        description: 'Space name to scan (e.g. studio-os-chat)'
+        required: false
+        default: 'studio-os-chat'
+      repo:
+        description: 'GitHub repo containing spaces/ (owner/repo)'
+        required: false
+        default: 'nothinginfinity/mmcp-inbox-router'
+      dry_run:
+        description: 'Dry run only (true/false)'
+        required: false
+        default: 'true'
 
 jobs:
   test:
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,3 +34,29 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm run lint
+
+  scan:
+    name: Scan Inbox
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Run inbox scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          node dist/cli.js scan \
+            --space "${{ github.event.inputs.space }}" \
+            --repo "${{ github.event.inputs.repo }}" \
+            --verbose \
+            $DRY_RUN_FLAG
