@@ -1,0 +1,75 @@
+[
+  {
+    "id": "task-create-default",
+    "name": "Create issue for task:create intent",
+    "match": { "intent": "task:create" },
+    "actions": [
+      {
+        "type": "create_issue",
+        "repo": "nothinginfinity/pocket-agent-engine",
+        "title": "[Agent Task] {{subject}}",
+        "body": "**From:** {{from}}\n**To:** {{to}}\n**Message ID:** {{id}}\n**Timestamp:** {{timestamp}}\n\n---\n\n{{body}}",
+        "labels": ["mmcp", "agent-task"]
+      },
+      {
+        "type": "write_receipt",
+        "spaceName": "studio-os-chat",
+        "messageId": "{{id}}",
+        "status": "processed",
+        "repo": "nothinginfinity/pocket-agent-engine"
+      }
+    ],
+    "enabled": true
+  },
+  {
+    "id": "approval-request",
+    "name": "Create issue for approval request",
+    "match": { "intent": "approval:request" },
+    "actions": [
+      {
+        "type": "create_issue",
+        "repo": "nothinginfinity/pocket-agent-engine",
+        "title": "[Approval Required] {{subject}}",
+        "body": "**Approval requested by:** {{from}}\n**For:** {{to}}\n**Message ID:** {{id}}\n\n---\n\n{{body}}\n\n> Reply with 'approved' or 'denied' to resolve.",
+        "labels": ["mmcp", "approval-required"]
+      }
+    ],
+    "enabled": true
+  },
+  {
+    "id": "handoff-request",
+    "name": "Create issue for agent handoff",
+    "match": { "intent": ["handoff:request", "handoff:accept"] },
+    "actions": [
+      {
+        "type": "create_issue",
+        "repo": "nothinginfinity/pocket-agent-engine",
+        "title": "[Handoff] {{subject}}",
+        "body": "**From:** {{from}}\n**To:** {{to}}\n\n---\n\n{{body}}",
+        "labels": ["mmcp", "handoff"]
+      }
+    ],
+    "enabled": true
+  },
+  {
+    "id": "status-update",
+    "name": "Append status update to thread",
+    "match": { "intent": "status:update" },
+    "actions": [
+      {
+        "type": "noop",
+        "reason": "Status update — no issue number extracted, logging only"
+      }
+    ],
+    "enabled": true
+  },
+  {
+    "id": "receipt-ack",
+    "name": "No-op for receipt acknowledgements",
+    "match": { "intent": "receipt:ack" },
+    "actions": [
+      { "type": "noop", "reason": "Receipt acknowledged — no action needed" }
+    ],
+    "enabled": true
+  }
+]
